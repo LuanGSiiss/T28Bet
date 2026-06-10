@@ -1,0 +1,24 @@
+project_name = "lab-eks-app"
+aws_region   = "us-east-1"
+
+# Atenção: em laboratório, NAT Gateway e RDS geram custo.
+enable_nat_gateway = true
+
+eks_version         = "1.30"
+node_instance_types = ["t3.small"]
+node_min_size       = 3
+node_desired_size   = 3
+node_max_size       = 5
+node_disk_size      = 20
+
+rds_db_name          = "appdb"
+rds_username         = "appuser"
+rds_password         = "TroqueEssaSenhaForte123!"
+rds_instance_class   = "db.t3.micro"
+rds_allocated_storage = 20
+
+enable_cloudwatch_observability_addon = false
+
+tags = {
+  Owner = "lab"
+}
