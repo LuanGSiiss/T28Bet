@@ -1,0 +1,15 @@
+{
+  "name": "t28bet-notification-lambda",
+  "version": "1.0.0",
+  "description": "Notification Lambda subscribed to SNS t28bet-results topic",
+  "main": "dist/handler.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/handler.js"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.0",
+    "typescript": "^5.0.0"
+  }
+}

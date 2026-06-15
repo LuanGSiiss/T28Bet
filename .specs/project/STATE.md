@@ -41,7 +41,30 @@
 
 ## Implementação
 
-Nenhuma feature implementada ainda. Pronto para iniciar pela Fase 1, F1.
+### Infraestrutura local criada (2026-06-15)
+- `docker-compose.yml`: MongoDB 7, Redis 7, ElasticMQ (SQS local), LocalStack (SNS local), backend e frontend com profile `app`
+- `elasticmq.conf`: filas `t28bet-bets` e `t28bet-settlement` pré-configuradas
+- `localstack-init/init-sns.sh`: cria topic `t28bet-results` no startup
+- `backend/.env`: todas as variáveis de ambiente para dev local (localhost addresses)
+- Todos os pacotes npm instalados no backend e frontend
+
+### Decisão de infra (Terraform-ready)
+Todos os endpoints de infra (MongoDB, Redis, SQS, SNS) vêm de variáveis de ambiente.
+Os clientes SQS/SNS têm endpoint condicional (`SQS_ENDPOINT` / `SNS_ENDPOINT` vazios = AWS real).
+Para migrar para Terraform: apenas atualizar as variáveis de ambiente — código não muda.
+
+### Implementação concluída (2026-06-15)
+Todas as features F1–F19 implementadas. TypeScript compila sem erros em backend e frontend.
+
+**Backend (22 arquivos):** modelos, middlewares, rotas, serviços Redis/SQS, WebSocket, workers SQS, seed script
+**Frontend (15 arquivos):** AuthContext, páginas (Login, Register, Matches, BetHistory, Transactions, Admin, MatchDetail), componentes (Header, BetModal, DepositModal, PrivateRoute), hooks (useWebSocket)
+**Lambda (6 arquivos):** settlement handler + settle.ts + models.ts standalone; notification handler
+**Infraestrutura (9 arquivos):** Dockerfiles (backend + frontend), nginx.conf, K8s manifests completos
+
+**Desvios dos specs:**
+- Bets route tem fallback síncrono se SQS_BETS_QUEUE_URL não configurado (retorna 201 em vez de 202)
+- Admin result route tem fallback síncrono se SQS_SETTLEMENT_QUEUE_URL não configurado
+- betsWorker.ts consolida polling de ambas as filas em um único módulo
 
 ## Blockers
 

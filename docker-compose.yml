@@ -1,0 +1,147 @@
+version: '3.9'
+
+# ─────────────────────────────────────────────────────────────────────────────
+# All connection endpoints are driven by environment variables so that when
+# Terraform provisions real AWS/MongoDB Atlas infrastructure, only the .env
+# (or K8s secrets) needs to change — the application code is untouched.
+#
+# Development profiles:
+#   infra only  →  docker compose up mongo redis elasticmq localstack
+#   full stack  →  docker compose --profile app up
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+
+  # ─── Storage ───────────────────────────────────────────────────────────────
+
+  mongo:
+    image: mongo:7
+    container_name: t28bet-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    environment:
+      MONGO_INITDB_DATABASE: t28bet
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')", "--quiet"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    restart: unless-stopped
+
+  # ─── Cache / Pub-Sub ───────────────────────────────────────────────────────
+
+  redis:
+    image: redis:7-alpine
+    container_name: t28bet-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  # ─── Messaging: SQS (ElasticMQ) ────────────────────────────────────────────
+  # Swap SQS_ENDPOINT to real AWS SQS URL when Terraform provisions the queues.
+
+  elasticmq:
+    image: softwaremill/elasticmq-native:latest
+    container_name: t28bet-elasticmq
+    ports:
+      - "9324:9324"  # SQS-compatible REST API
+      - "9325:9325"  # Admin UI
+    volumes:
+      - ./elasticmq.conf:/opt/elasticmq.conf:ro
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:9325 > /dev/null 2>&1 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    restart: unless-stopped
+
+  # ─── Messaging: SNS (LocalStack) ───────────────────────────────────────────
+  # Swap SNS_ENDPOINT to real AWS SNS endpoint when Terraform provisions topics.
+
+  localstack:
+    image: localstack/localstack:latest
+    container_name: t28bet-localstack
+    ports:
+      - "4566:4566"
+    environment:
+      SERVICES: sns
+      DEFAULT_REGION: us-east-1
+      LOCALSTACK_HOST: localstack
+    volumes:
+      - localstack_data:/var/lib/localstack
+      - ./localstack-init:/etc/localstack/init/ready.d:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
+    restart: unless-stopped
+
+  # ─── Application (profile: app) ────────────────────────────────────────────
+  # These services require Dockerfiles to be built first.
+  # Run: docker compose --profile app up
+
+  backend:
+    profiles: ["app"]
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: t28bet-backend
+    ports:
+      - "3001:3001"
+    environment:
+      PORT: 3001
+      MONGO_URI: mongodb://mongo:27017/t28bet
+      REDIS_URL: redis://redis:6379
+      SQS_ENDPOINT: http://elasticmq:9324
+      SQS_BETS_QUEUE_URL: http://elasticmq:9324/000000000000/t28bet-bets
+      SQS_SETTLEMENT_QUEUE_URL: http://elasticmq:9324/000000000000/t28bet-settlement
+      SNS_ENDPOINT: http://localstack:4566
+      SNS_RESULTS_TOPIC_ARN: arn:aws:sns:us-east-1:000000000000:t28bet-results
+      AWS_REGION: us-east-1
+      AWS_ACCESS_KEY_ID: local
+      AWS_SECRET_ACCESS_KEY: local
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: 24h
+      LOG_LEVEL: info
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      elasticmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3001/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    restart: unless-stopped
+
+  frontend:
+    profiles: ["app"]
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: t28bet-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  mongo_data:
+  localstack_data:
