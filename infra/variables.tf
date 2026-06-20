@@ -34,10 +34,22 @@ variable "eks_version" {
   default     = "1.30"
 }
 
+variable "eks_cluster_role_name" {
+  description = "Nome do role IAM preexistente usado pelo cluster EKS no Learner Lab."
+  type        = string
+  default     = "LabEksClusterRole"
+}
+
+variable "eks_node_role_name" {
+  description = "Nome do role IAM preexistente usado pelo node group EKS no Learner Lab."
+  type        = string
+  default     = "LabEksNodeRole"
+}
+
 variable "node_instance_types" {
   description = "Tipos de instância dos worker nodes."
   type        = list(string)
-  default     = ["t3.small"]
+  default     = ["t3.micro"]
 }
 
 variable "node_min_size" {
@@ -64,46 +76,16 @@ variable "node_disk_size" {
   default     = 20
 }
 
-variable "rds_db_name" {
-  description = "Nome do banco PostgreSQL."
+variable "redis_node_type" {
+  description = "Classe da instância do ElastiCache Redis."
   type        = string
-  default     = "appdb"
-}
-
-variable "rds_username" {
-  description = "Usuário master do PostgreSQL."
-  type        = string
-  default     = "appuser"
-}
-
-variable "rds_password" {
-  description = "Senha master do PostgreSQL. Em ambiente real, use AWS Secrets Manager ou variável sensível no CI."
-  type        = string
-  sensitive   = true
-}
-
-variable "rds_instance_class" {
-  description = "Classe da instância RDS."
-  type        = string
-  default     = "db.t3.micro"
-}
-
-variable "rds_allocated_storage" {
-  description = "Storage inicial do RDS em GB."
-  type        = number
-  default     = 20
-}
-
-variable "dynamodb_billing_mode" {
-  description = "Modo de cobrança do DynamoDB."
-  type        = string
-  default     = "PAY_PER_REQUEST"
+  default     = "cache.t3.micro"
 }
 
 variable "enable_cloudwatch_observability_addon" {
   description = "Habilita o add-on Amazon CloudWatch Observability no EKS. Pode exigir permissão extra no lab."
   type        = bool
-  default     = false
+  default     = true
 }
 
 variable "tags" {
