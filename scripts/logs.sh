@@ -4,6 +4,7 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 TARGET="${1:-backend}"
 shift || true
+export KUBECONFIG="${KUBECONFIG:-$HOME/.kube/config}"
 
 command -v kubectl >/dev/null 2>&1 || {
   echo "kubectl não encontrado no PATH" >&2

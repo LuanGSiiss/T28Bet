@@ -8,13 +8,14 @@ eks_version         = "1.30"
 # If your Learner Lab exposes different pre-created EKS roles, override them here.
 # eks_cluster_role_name = "LabEksClusterRole"
 # eks_node_role_name    = "LabEksNodeRole"
-node_instance_types = ["t3.micro"]
+node_instance_types = ["t3.small"]
 node_min_size       = 3
 node_desired_size   = 3
 node_max_size       = 3
 node_disk_size      = 20
 
-enable_cloudwatch_observability_addon = true
+enable_metrics_server                  = false
+enable_cloudwatch_observability_addon = false
 
 tags = {
   Owner = "lab"

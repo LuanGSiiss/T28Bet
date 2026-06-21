@@ -4,6 +4,7 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SEED_JOB_NAME="${SEED_JOB_NAME:-t28bet-seed}"
 NAMESPACE="${NAMESPACE:-t28bet}"
+export KUBECONFIG="${KUBECONFIG:-$HOME/.kube/config}"
 
 command -v terraform >/dev/null 2>&1 || {
   echo "terraform não encontrado no PATH" >&2

@@ -17,7 +17,7 @@ Infraestrutura genérica para laboratório AWS.
 - Repositórios ECR para backend e frontend
 - CloudWatch Log Groups
 - CloudWatch Alarms básicos
-- `metrics-server` para suportar HPA por CPU
+- HPA opcional com `metrics-server` desligado por padrão no lab
 
 ## Pré-requisitos
 
@@ -147,6 +147,6 @@ terraform destroy
 - O backend e o controller usam os papéis preexistentes do Learner Lab; não há criação de roles IAM customizadas no Terraform.
 - Se o seu laboratório usar nomes diferentes para os roles do EKS, sobrescreva `eks_cluster_role_name` e `eks_node_role_name` no `terraform.tfvars`.
 - A política IAM do AWS Load Balancer Controller está simplificada para laboratório. Em produção, substitua por política mais restritiva.
-- O pacote simples de observabilidade inclui o add-on `amazon-cloudwatch-observability`, `metrics-server` e um alarme de erro da aplicação baseado nos logs.
-- Se você quiser desabilitar o add-on de observabilidade em algum teste, defina `enable_cloudwatch_observability_addon = false` no `terraform.tfvars`.
-- O perfil mínimo do laboratório usa nodes `t3.micro`, backend com 1 réplica, HPA limitado e MongoDB com PVC pequeno para reduzir consumo de memória e disco.
+- O pacote simples de observabilidade mantém apenas o alarme de erro da aplicação baseado nos logs.
+- `metrics-server` e `amazon-cloudwatch-observability` ficam desligados por padrão para reduzir o risco de bootstrap falhar no Learner Lab.
+- O perfil estável do laboratório usa nodes `t3.small`, backend com 1 réplica, HPA limitado e MongoDB com PVC pequeno para reduzir consumo de memória e disco.

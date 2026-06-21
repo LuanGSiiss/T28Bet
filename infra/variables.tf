@@ -49,7 +49,7 @@ variable "eks_node_role_name" {
 variable "node_instance_types" {
   description = "Tipos de instância dos worker nodes."
   type        = list(string)
-  default     = ["t3.micro"]
+  default     = ["t3.small"]
 }
 
 variable "node_min_size" {
@@ -82,10 +82,16 @@ variable "redis_node_type" {
   default     = "cache.t3.micro"
 }
 
+variable "enable_metrics_server" {
+  description = "Habilita o metrics-server para HPA por CPU. Pode ser desligado para estabilizar o bootstrap."
+  type        = bool
+  default     = false
+}
+
 variable "enable_cloudwatch_observability_addon" {
   description = "Habilita o add-on Amazon CloudWatch Observability no EKS. Pode exigir permissão extra no lab."
   type        = bool
-  default     = true
+  default     = false
 }
 
 variable "tags" {
