@@ -14,6 +14,12 @@ resource "aws_sqs_queue" "settlement" {
   tags = local.common_tags
 }
 
+resource "aws_lambda_event_source_mapping" "gatilho_sqs_settlement" {
+  event_source_arn = aws_sqs_queue.settlement.arn
+  function_name    = aws_lambda_function.settlement.arn
+  batch_size       = 5
+}
+
 resource "aws_sns_topic" "app" {
   name = "${local.name}-topic"
 

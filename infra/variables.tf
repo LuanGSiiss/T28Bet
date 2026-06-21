@@ -99,3 +99,9 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
+
+variable "mongodb_uri" {
+  description = "URI de conexão com o MongoDB"
+  type        = string
+  sensitive   = true
+}
